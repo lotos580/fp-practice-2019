@@ -12,13 +12,19 @@ import Prelude hiding (foldl, foldr, unfoldr, map, concatMap,
     filter, maxBy, minBy, reverse, sum, product, elem)
 
 foldl :: (b -> a -> b) -> b -> [a] -> b
-foldl = todo
+foldl func arg [] = arg
+foldl func arg (x:xs) = foldl func arg' xs 
+                          where arg' = arg `func` x
 
-foldr :: (a -> b -> b) -> b -> [a] -> b
-foldr = todo
+foldr :: (a -> b -> b) -> b -> [a] -> b 
+foldr func arg [] = arg
+foldr func arg (x:xs) = x `func` foldr func arg xs
 
 unfoldr :: (b -> Maybe (a, b)) -> b -> [a]
-unfoldr = todo
+unfoldr func arg = case func arg of
+                     Nothing -> [] 
+                     Just (el, arg') -> el : unfoldr func arg' 
+
 
 -- Сумма всех элементов списка (пример)
 sum :: [Integer] -> Integer
@@ -28,39 +34,43 @@ sum lst = foldl (+) 0 lst
 reverse :: [a] -> [a]
 reverse lst = foldl f [] lst where f t h = h:t
 
+
 -- Отображение элементов списка
-map :: (a -> b) -> [a] -> [b]
-map = todo
+map :: (a -> b) -> [a] -> [b] 
+map args xs = foldr (\x xs -> args x : xs) [] xs 
 
 -- Произведение всех элементов списка
 product :: [Integer] -> Integer
-product = todo
+product list = foldr (*) 1 list
 
 -- Выделение из списка Maybe всех существующих значений
 catMaybes :: [Maybe a] -> [a]
-catMaybes = todo
+catMaybes list = foldr (\x list -> case x of
+                                      Nothing -> list
+                                      Just x  -> x : list ) [] list
 
 -- Диагональ матрицы
-diagonal :: [[a]] -> [a]
-diagonal = todo
+diagonal :: [[a]] -> [a] 
+diagonal l = reverse (foldr (\x acc -> acc ++ [(x !! (length l - length acc - 1))]) [] l) 
 
 -- Фильтр для всех элементов, не соответствующих предикату
 filterNot :: (a -> Bool) -> [a] -> [a]
-filterNot = todo
+filterNot pred list = foldr (\x list -> if not (pred x) then x:list else list) [] list
 
 -- Поиск элемента в списке
 elem :: (Eq a) => a -> [a] -> Bool
-elem = todo
+elem el list = foldr (\x acc -> acc || el == x) False list 
 
 -- Список чисел в диапазоне [from, to) с шагом step
-rangeTo :: Integer -> Integer -> Integer -> [Integer]
-rangeTo from to step = todo
+rangeTo :: Integer -> Integer -> Integer -> [Integer] 
+rangeTo from to step = foldr (\x list -> if mod (x-from) step == 0 then x:list else list) [] [from..(to-1)]
 
--- Конкатенация двух списков
+--  Конкатенация двух списков
 append :: [a] -> [a] -> [a]
-append = todo
+append xs ys = foldr (:) ys xs
 
 -- Разбиение списка lst на куски размером n
 -- (последний кусок может быть меньше)
-groups :: [a] -> Integer -> [[a]]
-groups lst n = todo
+groups :: [a] -> Integer -> [[a]] 
+groups lst n = unfoldr (\xs -> if null xs then Nothing 
+                                          else Just (splitAt n xs)) lst
